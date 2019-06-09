@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace WorkerServiceSample
 {
@@ -17,6 +18,7 @@ namespace WorkerServiceSample
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseWindowsService()
+                .ConfigureLogging(loggerFactory => loggerFactory.AddEventLog())
                 .ConfigureServices(services =>
                 {
                     services.AddHostedService<Worker>();
