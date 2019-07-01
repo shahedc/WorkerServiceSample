@@ -1,0 +1,229 @@
+
+
+			
+				
+	<article id="post-4051" class="post-4051 post type-post status-publish format-standard hentry category-asp-net category-html category-javascript category-learn category-visual-studio category-web-development tag-net tag-net-core tag-asp-net tag-asp-net-core tag-validation">
+				<header class="entry-header">
+			
+						<h1 class="entry-title">Validation in ASP .NET Core</h1>
+										<div class="comments-link">
+					<a href="https://wakeupandcode.com/validation-in-asp-net-core/#comments">6 Replies</a>				</div><!-- .comments-link -->
+					</header><!-- .entry-header -->
+
+				<div class="entry-content">
+			<p>This is the <strong>twenty-second </strong>of a <a href="https://wakeupandcode.com/aspnetcore/#aspnetcore2019" target="_blank">series of posts</a> on ASP .NET Core in 2019. In this series, we’ll cover 26 topics over a span of 26 weeks from January through June 2019, titled <strong>A-Z of ASP .NET Core!</strong></p>
+<h1><img class="alignnone wp-image-2792" src="https://wakeupandcode.com/wp-content/uploads/2018/10/ASPNETCoreLogo-300x267-150x150.png" alt="ASPNETCoreLogo-300x267" width="75" height="67"> A – Z of ASP .NET Core!</h1>
+<h2>In this Article:</h2>
+<ul>
+<li><a href="#V">V is for Validation</a></li>
+<li><a href="#attr">Validation Attributes</a></li>
+<li><a href="#server">Server-Side Validation</a></li>
+<li><a href="#client">Client-Side Validation</a></li>
+<li><a href="#remote">Client to Server with Remote Validation</a></li>
+<li><a href="#custom">Custom Attributes</a></li>
+<li><a href="#refs">References</a></li>
+</ul>
+<p><a id="V" name="V"></a></p>
+<h2>V is for Validation</h2>
+<p>To build upon a previous post on <a href="https://wakeupandcode.com/forms-and-fields-in-asp-net-core/" target="_blank">Forms and Fields in ASP .NET Core</a>, this post covers Validation in ASP .NET Core. When a user submits form field values, proper validation can help build a more user-friendly and secure web application. Instead of coding each view/page individually, you can simply use server-side attributes in your models/viewmodels.</p>
+<p><strong><span style="color: #ff0000;">NOTE</span></strong>: As of ASP .NET Core 2.2, validation may be skipped automatically if ASP .NET Core decides that validation is not needed. According to the <a href="https://docs.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-2.2?view=aspnetcore-2.2#validation-performance" target="_blank">&#8220;What&#8217;s New&#8221; release notes</a>, this includes primitive collections (e.g. a byte[] array or a Dictonary&lt;string, string&gt; key-value pair collection)</p>
+<p><a href="https://wakeupandcode.com/wp-content/uploads/2019/06/Blog-Diagram-Validation.png" rel="attachment wp-att-4071"><img class="alignnone size-full wp-image-4071" src="https://wakeupandcode.com/wp-content/uploads/2019/06/Blog-Diagram-Validation.png" alt="Blog-Diagram-Validation" width="1728" height="720" srcset="https://wakeupandcode.com/wp-content/uploads/2019/06/Blog-Diagram-Validation-300x125.png 300w, https://wakeupandcode.com/wp-content/uploads/2019/06/Blog-Diagram-Validation-1024x427.png 1024w, https://wakeupandcode.com/wp-content/uploads/2019/06/Blog-Diagram-Validation-624x260.png 624w, https://wakeupandcode.com/wp-content/uploads/2019/06/Blog-Diagram-Validation.png 1728w" sizes="(max-width: 1728px) 100vw, 1728px"></a></p>
+<p>This article will refer to the following sample code on GitHub:</p>
+<p><img class="alignnone size-full wp-image-409" src="https://wakeupandcode.com/wp-content/uploads/2013/06/Network-Download-icon.png" alt="Web" width="32" height="32"> Validation Sample App: <a href="https://github.com/shahedc/ValidationSampleApp" target="_blank">https://github.com/shahedc/ValidationSampleApp</a></p>
+<p><a id="attr" name="attr"></a></p>
+<h2>Validation Attributes</h2>
+<p>To implement model validation with [Attributes], you will typically use Data Annotations from the <a href="https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations" target="_blank">System.ComponentModel.DataAnnotations</a> namespace. The list of attribute does go beyond just validation functionality though. For example, the DataType attribute takes a datatype parameter, used for inferring the data type and used for displaying the field on a view/page (but does not provide validation for the field).</p>
+<p>Common attributes include the following</p>
+<ul>
+<li><strong>Range</strong>: lets you specify min-max values, inclusive of min and max</li>
+<li><strong>RegularExpression</strong>: useful for pattern recognition, e.g. phone numbers, zip/postal codes</li>
+<li><strong>Required</strong>: indicates that a field is required</li>
+<li><strong>StringLength</strong>: sets the maximum length for the string entered</li>
+<li><strong>MinLength</strong>: sets the minimum length of an array or string data</li>
+</ul>
+<p>From the sample code, here is an example from the <a href="https://github.com/shahedc/ValidationSampleApp/blob/master/ValidationMvc/Models/CinematicItem.cs" target="_blank">CinematicItem model</a> class:</p>
+<span style="color: #808080;font-family: Courier New;">public class CinematicItem<br />{<br />   public int Id { get; set; }<br /><br />   [Range(1,100)]<br />   public int Score { get; set; }<br /><br />   [Required]<br />   [StringLength(100)]<br />   public string Title { get; set; }<br /><br />   [StringLength(255)]<br />   public string Synopsis { get; set; }<br />  <br />   [DataType(DataType.Date)]<br />   [DisplayName("Available Date")]<br />   public DateTime AvailableDate { get; set; }<br /><br />   [Required]<br />   [DisplayName("Movie/Show/etc")]<br />   public CIType CIType { get; set; }<br />}</span>
+<p>From the above code, you can see that:</p>
+<ul>
+<li>The value for <strong>Score</strong> can be 1 or 100 or any integer in between</li>
+<li>The value for <strong>Title</strong> is a required string, needs to be less than 100 characters</li>
+<li>The value for <strong>Synopsis</strong> can be left blank, but has to be less than 100 characters.</li>
+<li>The value for <strong>AvailableDate</strong> is displayed as &#8220;Available Date&#8221; (with a space)</li>
+<li>Because of the <strong>DataType</strong> provided, <strong>AvailableDate</strong> is displayed as a selectable date in the browser</li>
+<li>The value for <strong>CIType</strong> (short for Cinematic Item Type) is displayed as &#8220;Movie/Show/etc&#8221; and is displayed as a selectable value obtained from the CIType data type (which happens to be an enumerator. (shown below)</li>
+</ul>
+<span style="color: #808080;font-family: Courier New;">public enum CIType<br />{<br />   Movie,<br />   Series,<br />   Short<br />}</span>
+<p>Here&#8217;s what it looks like in a browser when validation fails:</p>
+<p><a href="https://wakeupandcode.com/wp-content/uploads/2019/06/Validation-Fields-Errors.png" rel="attachment wp-att-4072"><img class="alignnone size-full wp-image-4072" src="https://wakeupandcode.com/wp-content/uploads/2019/06/Validation-Fields-Errors.png" alt="Validation-Fields-Errors" width="1993" height="1305" srcset="https://wakeupandcode.com/wp-content/uploads/2019/06/Validation-Fields-Errors-300x196.png 300w, https://wakeupandcode.com/wp-content/uploads/2019/06/Validation-Fields-Errors-1024x671.png 1024w, https://wakeupandcode.com/wp-content/uploads/2019/06/Validation-Fields-Errors-624x409.png 624w, https://wakeupandcode.com/wp-content/uploads/2019/06/Validation-Fields-Errors.png 1993w" sizes="(max-width: 1993px) 100vw, 1993px"></a></p>
+<p>The validation rules make it easier for the user to correct their entries before submitting the form.</p>
+<p><a id="server" name="server"></a></p>
+<h2>Server-Side Validation</h2>
+<p>Validation occurs before an MVC controller action (or equivalent handler method for Razor Pages) takes over. As a result, you should check to see if the validation has passed before continuing next steps.</p>
+<p>e.g. in an MVC controller</p>
+<span style="color: #808080;font-family: Courier New;">[HttpPost]<br />[ValidateAntiForgeryToken]<br />public async Task&lt;IActionResult&gt; Create(...)<br />{<br />   if (ModelState.IsValid)<br />   {<br />      // ... <br />      return RedirectToAction(nameof(Index));<br />   }<br />   return View(cinematicItem);<br />}</span>
+<p>e.g. in a Razor Page&#8217;s handler code:</p>
+<span style="color: #808080;font-family: Courier New;">public async Task&lt;IActionResult&gt; OnPostAsync()<br />{<br />   if (!ModelState.IsValid)<br />   {<br />      return Page();<br />   }<br /><br />   //... <br />   return RedirectToPage("./Index");<br />}</span>
+<p>Note that <strong>ModelState</strong>.<strong>IsValid</strong> is checked in both the <strong>Create</strong>() action method of an MVC Controller or the <strong>OnPostAsync</strong>() handler method of a Razor Page&#8217;s handler code. If <strong>IsValid</strong> is true, perform actions as desired. If false, reload the current view/page as is.</p>
+<p><a id="client" name="client"></a></p>
+<h2>Client-Side Validation</h2>
+<p>It goes without saying that you should always have server-side validation. All the client-side validation in the world won&#8217;t prevent a malicious user from sending a GET/POST request to your form&#8217;s endpoint. Cross-site request forgery in the <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/views/working-with-forms#the-form-tag-helper" target="_blank">Form tag helper</a> does provide a certain level of protection, but you still need server-side validation. That being said, client-side validation helps to catch the problem before your server receives the request, while providing a better user experience.</p>
+<p>When you create a new ASP .NET Core project using one of the built-in templates, you should see a shared partial view called <a href="https://github.com/shahedc/ValidationSampleApp/blob/master/ValidationMvc/Views/Shared/_ValidationScriptsPartial.cshtml" target="_blank">_ValidationScriptsPartial.cshtml</a>. This partial view should include references to <a href="https://github.com/aspnet/jquery-validation-unobtrusive" target="_blank">jQuery unobtrusive validation</a>, as shown below:</p>
+<span style="color: #808080;font-family: Courier New;">&lt;environment include="Development"&gt;<br />   &lt;script src="~/lib/jquery-validation/dist/jquery.validate.js"&gt;&lt;/script&gt;<br />   &lt;script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"&gt;&lt;/script&gt;<br />&lt;/environment&gt;</span>
+<p>If you create a scaffolded controller with views/pages, you should see the following reference at the bottom of your page or view.</p>
+<p>e.g. at the bottom of <a href="https://github.com/shahedc/ValidationSampleApp/blob/master/ValidationMvc/Views/CinematicItem/Create.cshtml" target="_blank">Create.cshtml</a> view</p>
+<span style="color: #808080;font-family: Courier New;">@section Scripts {<br />   @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}<br />}</span>
+<p>e.g. at the bottom of the <a href="https://github.com/shahedc/ValidationSampleApp/blob/master/ValidationRazor/Pages/CinematicItems/Create.cshtml" target="_blank">Create.cshtml</a> page</p>
+<span style="color: #808080;font-family: Courier New;">@section Scripts {<br />   @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}<br />}</span>
+<p>Note that the syntax is identical whether it&#8217;s an MVC view or a Razor page. That being said, you may want to disable client-side validation. This is accomplished in different ways, whether it&#8217;s for an MVC view or a Razor page.</p>
+<p>From the official <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/models/validation?view=aspnetcore-2.2#disable-client-side-validation" target="_blank">docs</a>, the following code should be used within the <strong>ConfigureServices</strong>() method of your Startup.cs class, to set <strong>ClientValidationEnabled</strong> to false in your HTMLHelperOptions configuration.</p>
+<span style="color: #808080;font-family: Courier New;">services.AddMvc().AddViewOptions(options =&gt;<br />{<br />   if (_env.IsDevelopment())<br />   {<br />      options.HtmlHelperOptions.ClientValidationEnabled = false;<br />   }<br />});</span>
+<p>Also mentioned in the official docs, the following code can be used for your Razor Pages, within the <strong>ConfigureServices</strong>() method of your Startup.cs class.</p>
+<span style="color: #808080;font-family: Courier New;">services.Configure&lt;HtmlHelperOptions&gt;(o =&gt; o.ClientValidationEnabled = false);</span>
+<p><a id="remote" name="remote"></a></p>
+<h2>Client to Server with Remote Validation</h2>
+<p>If you need to call a server-side method while performing client-side validation, you can use the [<strong>Remote</strong>] attribute on a model property. You would then pass it the name of a server-side action method which returns an <strong>IActionResult </strong>with a true boolean result for a valid field. This [<strong>Remote</strong>] attribute is available in the Microsoft.AspNetCore.Mvc namespace, from the <a href="https://www.nuget.org/packages/Microsoft.AspNetCore.Mvc.ViewFeatures" target="_blank">Microsoft.AspNetCore.Mvc.ViewFeatures</a> NuGet package.</p>
+<p>The model property would look something like this:</p>
+<span style="color: #808080;font-family: Courier New;">[Remote(action: "MyActionMethod", controller: "MyControllerName")]<br />public string MyProperty { get; set; }</span>
+<p>In the controller class, (e.g. <strong>MyControllerName</strong>), you would define an action method with the name specified in the [<strong>Remote</strong>] attribute parameters, e.g. <strong>MyActionMethod. </strong></p>
+<span style="color: #808080;font-family: Courier New;">[AcceptVerbs("Get", "Post")]<br />public IActionResult MyActionMethod(...)<br />{<br />   if (TestForFailureHere())<br />   {<br />      return Json("Invalid Error Message");<br />   }<br />   return Json(true);<br />}</span>
+<p>You may notice that if the validation fails, the controller action method returns a JSON response with an appropriate error message in a string. Instead of a text string, you can also use a false, null, or undefined value to indicate an invalid result. If validation has passed, you would use <strong>Json(true)</strong> to indicate that the validation has passed.</p>
+<p><em>So, when would you actually use something like this?</em> Any scenario where a selection/entry needs to be validated by the server can provide a better user experience by providing a result as the user is typing, instead of waiting for a form submission. For example: imagine that a user is buying online tickets for an event, and selecting a seat number displayed on a seating chart. The selected seat could then be displayed in an input field and then sent back to the server to determine whether the seat is still available or not.</p>
+<p><a id="custom" name="custom"></a></p>
+<h2>Custom Attributes</h2>
+<p>In addition to all of the above, you can simply build your own custom attributes. If you take a look at the classes for the built-in attributes, e.g. <a href="https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.requiredattribute" target="_blank">RequiredAttribute</a>, you will notice that they also extend the same parent class:</p>
+<ul>
+<li>System.ComponentModel.DataAnnotations.ValidationAttribute</li>
+</ul>
+<p><span class="hljs-keyword">You can do the same thing with your custom attribute&#8217;s class definition:</span></p>
+<span style="color: #808080;font-family: Courier New;">public class MyCustomAttribute: ValidationAttribute <br />{<br />   // ...<br />}</span>
+<p>The parent class <a href="https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.validationattribute" target="_blank">ValidationAttribute</a>, has a virtual <strong>IsValid</strong>() method that you can override to return whether validation has been calculated successfully (or not).</p>
+<span style="color: #808080;font-family: Courier New;">public class MyCustomAttribute: ValidationAttribute <br />{<br />   // ...<br />   protected override ValidationResult IsValid(<br />      object value, ValidationContext validationContext)<br />   {<br />      if (TestForFailureHere())<br />      {<br />         return new ValidationResult("Invalid Error Message");<br />      }<br />      <br />      return ValidationResult.Success;<br />   }<br />}</span>
+<p>You may notice that if the validation fails, the <strong>IsValid(</strong>) method returns a <strong>ValidationResult</strong>() with an appropriate error message in a string. If validation has passed, you would return <strong>ValidationResult.Success</strong> to indicate that the validation has passed.</p>
+<p><a id="refs" name="refs"></a></p>
+<h2>References</h2>
+<ul>
+<li>Add validation to an ASP.NET Core MVC app: <a href="https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mvc-app/validation" target="_blank">https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mvc-app/validation</a></li>
+<li>Model validation in ASP.NET Core MVC and Razor Pages: <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/models/validation" target="_blank">https://docs.microsoft.com/en-us/aspnet/core/mvc/models/validation</a></li>
+<li>System.ComponentModel.DataAnnotations Namespace: <a href="https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations" target="_blank">https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations</a></li>
+<li>ValidationAttribute Class (System.ComponentModel.DataAnnotations): <a href="https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.validationattribute" target="_blank">https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.validationattribute</a></li>
+</ul>
+					</div><!-- .entry-content -->
+		
+		<footer class="entry-meta">
+			This entry was posted in <a href="https://wakeupandcode.com/category/asp-net/" rel="category tag">ASP.NET</a>, <a href="https://wakeupandcode.com/category/html/" rel="category tag">HTML</a>, <a href="https://wakeupandcode.com/category/javascript/" rel="category tag">JavaScript</a>, <a href="https://wakeupandcode.com/category/learn/" rel="category tag">Learn</a>, <a href="https://wakeupandcode.com/category/visual-studio/" rel="category tag">Visual Studio</a>, <a href="https://wakeupandcode.com/category/web-development/" rel="category tag">Web Development</a> and tagged <a href="https://wakeupandcode.com/tag/net/" rel="tag">.net</a>, <a href="https://wakeupandcode.com/tag/net-core/" rel="tag">.NET Core</a>, <a href="https://wakeupandcode.com/tag/asp-net/" rel="tag">ASP.NET</a>, <a href="https://wakeupandcode.com/tag/asp-net-core/" rel="tag">ASP.NET Core</a>, <a href="https://wakeupandcode.com/tag/validation/" rel="tag">Validation</a> on <a href="https://wakeupandcode.com/validation-in-asp-net-core/" title="10:00 am" rel="bookmark"><time class="entry-date" datetime="2019-06-04T10:00:35+00:00">June 4, 2019</time></a><span class="by-author"> by <span class="author vcard"><a class="url fn n" href="https://wakeupandcode.com/author/admin/" title="View all posts by Shahed C" rel="author">Shahed C</a></span></span>.								</footer><!-- .entry-meta -->
+	</article><!-- #post -->
+
+				<nav class="nav-single">
+					<h3 class="assistive-text">Post navigation</h3>
+					<span class="nav-previous"><a href="https://wakeupandcode.com/unit-testing-in-asp-net-core/" rel="prev"><span class="meta-nav">&larr;</span> Unit Testing in ASP .NET Core</a></span>
+					<span class="nav-next"><a href="https://wakeupandcode.com/worker-service-in-asp-net-core/" rel="next">Worker Service in ASP .NET Core <span class="meta-nav">&rarr;</span></a></span>
+				</nav><!-- .nav-single -->
+
+				
+<div id="comments" class="comments-area">
+
+	
+			<h2 class="comments-title">
+			6 thoughts on &ldquo;<span>Validation in ASP .NET Core</span>&rdquo;		</h2>
+
+		<ol class="commentlist">
+				<li class="comment even thread-even depth-1" id="li-comment-3519">
+		<article id="comment-3519" class="comment">
+			<header class="comment-meta comment-author vcard">
+				<img alt='' src='https://secure.gravatar.com/avatar/f600efe82b7f3a1614af15cf3f833215?s=44&#038;r=g' srcset='https://secure.gravatar.com/avatar/f600efe82b7f3a1614af15cf3f833215?s=88&amp;r=g 2x' class='avatar avatar-44 photo' height='44' width='44'><cite><b class="fn"><a href='https://dmitry-pavlov.com' rel='external nofollow' class='url'>Dmitry Pavlov</a></b> </cite><a href="https://wakeupandcode.com/validation-in-asp-net-core/#comment-3519"><time datetime="2019-06-04T13:05:52+00:00">June 4, 2019 at 1:05 pm</time></a>			</header><!-- .comment-meta -->
+
+			
+			<section class="comment-content comment">
+				<p>One more nice option for validation in ASP .NET Core is using the &#8220;Fluent Validation&#8221; (a popular .NET library for building strongly-typed validation rules): <a href="https://fluentvalidation.net/aspnet#asp-net-core" rel="nofollow">https://fluentvalidation.net/aspnet#asp-net-core</a></p>
+							</section><!-- .comment-content -->
+
+			<div class="reply">
+				<a rel='nofollow' class='comment-reply-link' href='https://wakeupandcode.com/validation-in-asp-net-core/?replytocom=3519#respond' onclick='return addComment.moveForm( "comment-3519", "3519", "respond", "4051" )' aria-label='Reply to Dmitry Pavlov'>Reply</a> <span>&darr;</span>			</div><!-- .reply -->
+		</article><!-- #comment-## -->
+	</li><!-- #comment-## -->
+	<li class="comment byuser comment-author-admin bypostauthor odd alt thread-odd thread-alt depth-1" id="li-comment-3520">
+		<article id="comment-3520" class="comment">
+			<header class="comment-meta comment-author vcard">
+				<img alt='' src='https://secure.gravatar.com/avatar/9f7a8b093c46096635fb0690edf13c5e?s=44&#038;r=g' srcset='https://secure.gravatar.com/avatar/9f7a8b093c46096635fb0690edf13c5e?s=88&amp;r=g 2x' class='avatar avatar-44 photo' height='44' width='44'><cite><b class="fn">Shahed C</b> <span>Post author</span></cite><a href="https://wakeupandcode.com/validation-in-asp-net-core/#comment-3520"><time datetime="2019-06-04T13:09:53+00:00">June 4, 2019 at 1:09 pm</time></a>			</header><!-- .comment-meta -->
+
+			
+			<section class="comment-content comment">
+				<p>Aah yes, I was expecting this to be the first comment here. <img src="https://wakeupandcode.com/wp-includes/images/smilies/simple-smile.png" alt=":)" class="wp-smiley" style="height: 1em; max-height: 1em;"> I had planned a section for FluentValidation, had it in my original outline and notes but removed it in the final draft late last night. </p>
+<p>Thanks for sharing the link!</p>
+							</section><!-- .comment-content -->
+
+			<div class="reply">
+				<a rel='nofollow' class='comment-reply-link' href='https://wakeupandcode.com/validation-in-asp-net-core/?replytocom=3520#respond' onclick='return addComment.moveForm( "comment-3520", "3520", "respond", "4051" )' aria-label='Reply to Shahed C'>Reply</a> <span>&darr;</span>			</div><!-- .reply -->
+		</article><!-- #comment-## -->
+	<ol class="children">
+	<li class="comment even depth-2" id="li-comment-3521">
+		<article id="comment-3521" class="comment">
+			<header class="comment-meta comment-author vcard">
+				<img alt='' src='https://secure.gravatar.com/avatar/f600efe82b7f3a1614af15cf3f833215?s=44&#038;r=g' srcset='https://secure.gravatar.com/avatar/f600efe82b7f3a1614af15cf3f833215?s=88&amp;r=g 2x' class='avatar avatar-44 photo' height='44' width='44'><cite><b class="fn"><a href='https://dmitry-pavlov.com' rel='external nofollow' class='url'>Dmitry Pavlov</a></b> </cite><a href="https://wakeupandcode.com/validation-in-asp-net-core/#comment-3521"><time datetime="2019-06-04T13:24:24+00:00">June 4, 2019 at 1:24 pm</time></a>			</header><!-- .comment-meta -->
+
+			
+			<section class="comment-content comment">
+				<p>It could be a separate post about that I believe. Maybe just out of this series.</p>
+							</section><!-- .comment-content -->
+
+			<div class="reply">
+				<a rel='nofollow' class='comment-reply-link' href='https://wakeupandcode.com/validation-in-asp-net-core/?replytocom=3521#respond' onclick='return addComment.moveForm( "comment-3521", "3521", "respond", "4051" )' aria-label='Reply to Dmitry Pavlov'>Reply</a> <span>&darr;</span>			</div><!-- .reply -->
+		</article><!-- #comment-## -->
+	</li><!-- #comment-## -->
+</ol><!-- .children -->
+</li><!-- #comment-## -->
+	<li class="comment odd alt thread-even depth-1" id="li-comment-3523">
+		<article id="comment-3523" class="comment">
+			<header class="comment-meta comment-author vcard">
+				<img alt='' src='https://secure.gravatar.com/avatar/d0e5dd05cbe35ebd7eec2b91ffdcc785?s=44&#038;r=g' srcset='https://secure.gravatar.com/avatar/d0e5dd05cbe35ebd7eec2b91ffdcc785?s=88&amp;r=g 2x' class='avatar avatar-44 photo' height='44' width='44'><cite><b class="fn"><a href='http://devtobecurious.com' rel='external nofollow' class='url'>Evan Boissonnot</a></b> </cite><a href="https://wakeupandcode.com/validation-in-asp-net-core/#comment-3523"><time datetime="2019-06-05T11:56:33+00:00">June 5, 2019 at 11:56 am</time></a>			</header><!-- .comment-meta -->
+
+			
+			<section class="comment-content comment">
+				<p>hi Dmitri<br>
+thanks for this article<br>
+good stuff about validation</p>
+							</section><!-- .comment-content -->
+
+			<div class="reply">
+				<a rel='nofollow' class='comment-reply-link' href='https://wakeupandcode.com/validation-in-asp-net-core/?replytocom=3523#respond' onclick='return addComment.moveForm( "comment-3523", "3523", "respond", "4051" )' aria-label='Reply to Evan Boissonnot'>Reply</a> <span>&darr;</span>			</div><!-- .reply -->
+		</article><!-- #comment-## -->
+	<ol class="children">
+	<li class="comment byuser comment-author-admin bypostauthor even depth-2" id="li-comment-3525">
+		<article id="comment-3525" class="comment">
+			<header class="comment-meta comment-author vcard">
+				<img alt='' src='https://secure.gravatar.com/avatar/9f7a8b093c46096635fb0690edf13c5e?s=44&#038;r=g' srcset='https://secure.gravatar.com/avatar/9f7a8b093c46096635fb0690edf13c5e?s=88&amp;r=g 2x' class='avatar avatar-44 photo' height='44' width='44'><cite><b class="fn">Shahed C</b> <span>Post author</span></cite><a href="https://wakeupandcode.com/validation-in-asp-net-core/#comment-3525"><time datetime="2019-06-08T16:11:54+00:00">June 8, 2019 at 4:11 pm</time></a>			</header><!-- .comment-meta -->
+
+			
+			<section class="comment-content comment">
+				<p>Hi Evan, this is Shahed (the author of this article) <img src="https://wakeupandcode.com/wp-includes/images/smilies/simple-smile.png" alt=":)" class="wp-smiley" style="height: 1em; max-height: 1em;"></p>
+							</section><!-- .comment-content -->
+
+			<div class="reply">
+				<a rel='nofollow' class='comment-reply-link' href='https://wakeupandcode.com/validation-in-asp-net-core/?replytocom=3525#respond' onclick='return addComment.moveForm( "comment-3525", "3525", "respond", "4051" )' aria-label='Reply to Shahed C'>Reply</a> <span>&darr;</span>			</div><!-- .reply -->
+		</article><!-- #comment-## -->
+	</li><!-- #comment-## -->
+</ol><!-- .children -->
+</li><!-- #comment-## -->
+	<li class="pingback odd alt thread-odd thread-alt depth-1" id="comment-3524">
+		<p>Pingback: <a href='http://blog.cwa.me.uk/2019/06/06/the-morning-brew-2760/' rel='external nofollow' class='url'>The Morning Brew - Chris Alcock &raquo; The Morning Brew #2760</a> </p>
+	</li><!-- #comment-## -->
+		</ol><!-- .commentlist -->
+
+		
+		
+	
+			
+		<div id="respond" class="comment-respond">
+			<h3 id="reply-title" class="comment-reply-title">Leave a Reply <small><a rel="nofollow" id="cancel-comment-reply-link" href="/validation-in-asp-net-core/#respond" style="display:none;">Cancel reply</a></small></h3>
+			<form id="commentform" class="comment-form">
+				<iframe src="https://jetpack.wordpress.com/jetpack-comment/?blogid=51238239&#038;postid=4051&#038;comment_registration=0&#038;require_name_email=1&#038;stc_enabled=1&#038;stb_enabled=1&#038;show_avatars=1&#038;avatar_default=gravatar_default&#038;greeting=Leave+a+Reply&#038;greeting_reply=Leave+a+Reply+to+%25s&#038;color_scheme=light&#038;lang=en-US&#038;jetpack_version=3.9.7&#038;sig=2107060f63adf20f00c6fb2ec23b18f2d4f9a4d7#parent=https%3A%2F%2Fwakeupandcode.com%2Fvalidation-in-asp-net-core%2F" allowtransparency="false" style="width:100%; height: 430px;border:0;" frameborder="0" scrolling="no" name="jetpack_remote_comment" id="jetpack_remote_comment"></iframe>
+			</form>
+		</div>
+
+		
+		<input type="hidden" name="comment_parent" id="comment_parent" value="">
+
+		<p class="akismet_comment_form_privacy_notice">This site uses Akismet to reduce spam. <a href="https://akismet.com/privacy/" target="_blank" rel="nofollow noopener">Learn how your comment data is processed</a>.</p>
+</div><!-- #comments .comments-area -->
+			
+		
