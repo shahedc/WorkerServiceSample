@@ -10,7 +10,7 @@ namespace WorkerServiceSample.Utils
 {
     public class DocMaker
     {
-        public static void MakeDoc(string pageUrl)
+        public static void MakeDoc(string pageUrl, bool showHtml = false)
         {
             // Get HTML from website
             string htmlContent = string.Empty;
@@ -27,12 +27,11 @@ namespace WorkerServiceSample.Utils
             }
             outputFileName = request.RequestUri.AbsolutePath.Substring(1);
 
-            //Console.WriteLine(html);
-
+            if (showHtml)
+                Console.WriteLine(htmlContent);
 
             // Get content
             HtmlDocument htmlDoc = new HtmlDocument();
-            //htmlDoc.Load(@"file.htm");
             htmlDoc.LoadHtml(htmlContent);
 
             htmlDoc.DocumentNode.SelectNodes("//pre")
@@ -41,13 +40,11 @@ namespace WorkerServiceSample.Utils
             var preNodes = htmlDoc.DocumentNode.SelectNodes("//pre");
             foreach (HtmlNode htmlPreNode in preNodes)
             {
-                var replacedText1 = htmlPreNode.InnerText + "_translated";
-                var replacedText2 = htmlPreNode.InnerText.Replace('\n', 'X');
-                var replacedText3 = htmlPreNode.InnerText.Replace(System.Environment.NewLine, "Y");
-                var replacedText4 = htmlPreNode.InnerText.Replace(System.Environment.NewLine, "NEWLINE");
+                // replace doc's newline with "NEWLINE" placeholder as HTML tag insertion doesn't seem to work (?)
+                var replacedText = htmlPreNode.InnerText.Replace(System.Environment.NewLine, "NEWLINE");
 
                 var TextWithFormatting = "<span style=\"color: #808080;font-family: Courier New;\">"
-                    + replacedText4 + "</span>";
+                    + replacedText + "</span>";
 
                 htmlPreNode.ParentNode.ReplaceChild(
                     HtmlTextNode.CreateNode(
@@ -58,17 +55,8 @@ namespace WorkerServiceSample.Utils
             HtmlNode htmlNode = htmlDoc.DocumentNode.SelectSingleNode("//*[@id=\"content\"]");
             string htmlNodeContent = (htmlNode == null) ? "Error, id not found" : htmlNode.InnerHtml;
 
-            //htmlNode.InnerHtml = htmlNodeContent;
-
-
-            //// Replace <pre> tag with custom font
-            //htmlNodeContent = htmlNodeContent.Replace(
-            //    "<pre>", "<span style=\"color: #ff0000;font-family: Courier New;\">");
-            //htmlNodeContent = htmlNodeContent.Replace("</pre>", "</span>");
-
             // replace placeholders with actual <br> tags
             htmlNodeContent = htmlNodeContent.Replace("NEWLINE", "<br />");
-
 
             // Write html node's content to text file.
             File.WriteAllText(@"HtmlContent.txt", htmlNodeContent);
@@ -79,11 +67,6 @@ namespace WorkerServiceSample.Utils
             WordDocument wordDoc = new WordDocument($"{outputFileName}.docx");
             wordDoc.Process(new HtmlParser(htmlNodeContent));
             wordDoc.Save();
-
-            //WordDocument doc = new WordDocument("blog.docx");
-            //doc.BaseURL = "http:\\wakeupandcode.com";
-            //doc.Process(new HtmlParser("<a href=\"index.htm\">sample</a>"));
-            //doc.Save();
         }
     }
 }
