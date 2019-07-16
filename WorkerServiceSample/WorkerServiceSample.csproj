@@ -12,4 +12,8 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="3.0.0-preview5.19227.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="3.0.0-preview5.19227.9" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="chapters\" />
+  </ItemGroup>
 </Project>
