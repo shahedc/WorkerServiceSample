@@ -33,6 +33,11 @@ namespace WorkerServiceSample.Utils
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(htmlContent);
             //FixImageDimensions(htmlDoc);
+
+            DeleteHtmlContent(htmlDoc, "//footer[@class=\"entry-meta\"]");
+            DeleteHtmlContent(htmlDoc, "//div[@id=\"comments\"]");
+            DeleteHtmlContent(htmlDoc, "//nav[@class=\"nav-single\"]");
+
             string htmlNodeContent = FixCodeFormatting(htmlDoc);
 
             // Write html node's content to text file.
@@ -46,6 +51,12 @@ namespace WorkerServiceSample.Utils
             wordDoc.Process(new HtmlParser(htmlNodeContent));
             wordDoc.Save();
             Console.WriteLine($"Output: {outputFileName}.docx");
+        }
+
+        private static void DeleteHtmlContent(HtmlDocument htmlDoc, string nodeSelector)
+        {
+            HtmlNode htmlNode = htmlDoc.DocumentNode.SelectSingleNode(nodeSelector);
+            htmlNode.Remove();
         }
 
         private static string FixCodeFormatting(HtmlDocument htmlDoc)
