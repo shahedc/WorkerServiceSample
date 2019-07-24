@@ -23,25 +23,41 @@ namespace WorkerServiceSample.Utils
             using (StreamReader reader = new StreamReader(stream))
             {
                 htmlContent = reader.ReadToEnd();
-
             }
             outputFileName = request.RequestUri.AbsolutePath.Substring(1);
 
             if (showHtml)
                 Console.WriteLine(htmlContent);
 
-            // Get content
+            // load HTML content, fix formatting
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(htmlContent);
+            //FixImageDimensions(htmlDoc);
+            string htmlNodeContent = FixCodeFormatting(htmlDoc);
 
-            htmlDoc.DocumentNode.SelectNodes("//pre")
-                .Append(htmlDoc.CreateTextNode("first line\nsecond line"));
+            // Write html node's content to text file.
+            File.WriteAllText(@"HtmlContent.txt", htmlNodeContent);
 
+            Console.WriteLine("Making your document...");
+            Console.WriteLine($"Source: {pageUrl}");
+
+            // Create DOCX file
+            WordDocument wordDoc = new WordDocument($"{outputFileName}.docx");
+            wordDoc.Process(new HtmlParser(htmlNodeContent));
+            wordDoc.Save();
+            Console.WriteLine($"Output: {outputFileName}.docx");
+        }
+
+        private static string FixCodeFormatting(HtmlDocument htmlDoc)
+        {
+            // look for <pre> tags which contain code snippets 
             var preNodes = htmlDoc.DocumentNode.SelectNodes("//pre");
             foreach (HtmlNode htmlPreNode in preNodes)
             {
-                // replace doc's newline with "NEWLINE" placeholder as HTML tag insertion doesn't seem to work (?)
-                var replacedText = htmlPreNode.InnerText.Replace(System.Environment.NewLine, "NEWLINE");
+                // replace doc's newline with "NEWLINE" placeholder
+                // ... as HTML tag insertion doesn't seem to work (?)
+                var replacedText = htmlPreNode.InnerText
+                    .Replace(System.Environment.NewLine, "NEWLINE");
 
                 var TextWithFormatting = "<span style=\"color: #808080;font-family: Courier New;\">"
                     + replacedText + "</span>";
@@ -52,21 +68,42 @@ namespace WorkerServiceSample.Utils
             }
             //
 
+
             HtmlNode htmlNode = htmlDoc.DocumentNode.SelectSingleNode("//*[@id=\"content\"]");
             string htmlNodeContent = (htmlNode == null) ? "Error, id not found" : htmlNode.InnerHtml;
 
             // replace placeholders with actual <br> tags
             htmlNodeContent = htmlNodeContent.Replace("NEWLINE", "<br />");
+            return htmlNodeContent;
+        }
 
-            // Write html node's content to text file.
-            File.WriteAllText(@"HtmlContent.txt", htmlNodeContent);
+        private static void FixImageDimensions(HtmlDocument htmlDoc)
+        {
+            // look for <img> tags which contain code snippets 
+            var imgNodes = htmlDoc.DocumentNode.SelectNodes("//img");
+            foreach (HtmlNode htmlImgNode in imgNodes)
+            {
+                if (htmlImgNode.Attributes["class"] != null)
+                    htmlImgNode.Attributes["class"].Remove();
 
-            Console.WriteLine("Making your document...");
+                if (htmlImgNode.Attributes["srcset"] != null)
+                    htmlImgNode.Attributes["srcset"].Remove();
 
-            // Create DOCX file
-            WordDocument wordDoc = new WordDocument($"{outputFileName}.docx");
-            wordDoc.Process(new HtmlParser(htmlNodeContent));
-            wordDoc.Save();
+                if (htmlImgNode.Attributes["sizes"] != null)
+                    htmlImgNode.Attributes["sizes"].Remove();
+
+                if (htmlImgNode.Attributes["width"] != null)
+                    htmlImgNode.Attributes["width"].Remove();
+
+                if (htmlImgNode.Attributes["height"] != null)
+                    htmlImgNode.Attributes["height"].Remove();
+
+                //Create new style attribute to set width?
+                HtmlAttribute styleAttribute = htmlDoc.CreateAttribute("style");
+                styleAttribute.Value = "width:100px";   
+                htmlImgNode.Attributes.Add(styleAttribute);
+
+            }
         }
     }
 }
